@@ -1,0 +1,42 @@
+[project]
+name = "ndoc-mcp"
+version = "0.1.0"
+description = "MCP server exposing the n-doc core (files, docs, build, checks, git) to agents"
+requires-python = ">=3.11"
+dependencies = ["ndoc-core", "mcp>=2.3,<3"]
+
+[project.scripts]
+ndoc-mcp = "ndoc_mcp.server:main"
+ndoc-check = "ndoc_mcp.cli:main"
+
+[tool.uv.sources]
+ndoc-core = { path = "../core", editable = true }
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ndoc_mcp"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-m 'not docker'"
+markers = ["docker: needs Docker and the n-doc image (slow, real build)"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM"]
+ignore = ["S603", "S607"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "S108"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["ndoc_core", "ndoc_mcp"]
