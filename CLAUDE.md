@@ -24,7 +24,11 @@ React UI, and a Claude agent. `.tex` and `common/db/*.csv` stay the source of tr
   also work (`ase`, `adv_tds`, ...). Note: the ST alias is `st`, its directory is `ase`.
 - Output: `<dir>/<dir>.pdf`; `delivery` copies them to `deliverables/`.
 - Builds need a real git repo (`make hooks` writes `.git/hooks` and `.git/gitHeadInfo.gin`).
-- `mwe_*` are small test documents that build fast.
+- `mwe_*` are small test documents that build fast. On a fresh clone run
+  `./runmake.sh hooks` first: `mwe` does not depend on `hooks` and fails with
+  `Undefined control sequence \THEDAY` (gitinfo2) without `.git/gitHeadInfo.gin`.
+- After a failed build latexmk may report "Nothing to do" yet still fail;
+  run `./runmake.sh cleanmwe` (or `clean`) and rebuild.
 
 ## n-doc gotchas
 
