@@ -12,6 +12,7 @@ are `CoreError` subclasses with a stable `code`.
 | `docs` | documents from `PDF_DIRS`/`MWE_DIRS`, `\input` tree, `document_files`, `pdf_path` |
 | `build` | allow-listed `make` targets in `ndesign/n-doc:<version>`, one build at a time, timeout kills the container, log tail + error lines + updated PDFs |
 | `checks` | brace/env sanity, reference macros vs `common/db` (`\sfrlink`, `\tdslink`, …), `check_sfr_consistency.sh` wrapper, PDF "is undefined"/"To Do" scan |
+| `pdf` | `pdftotext` page texts, `search_pdf` by document name (wrap-insensitive, `stale` flag) |
 | `git` | status, diff, log, branch create/switch, commit of explicit paths; no reset/force/push; `main`/`master` protected |
 
 Path policy: no absolute paths, `..`, hidden entries or `web/`; symlink targets

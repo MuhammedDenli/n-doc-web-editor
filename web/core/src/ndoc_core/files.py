@@ -261,6 +261,19 @@ def replace_text(
 MAX_PATTERN_LEN = 500
 
 
+def compile_pattern(pattern: str, *, regex: bool, ignore_case: bool) -> re.Pattern[str]:
+    """Validate and compile a user/agent supplied search pattern."""
+    if not isinstance(pattern, str) or not pattern or len(pattern) > MAX_PATTERN_LEN:
+        raise InvalidPatternError(
+            f"pattern must be 1..{MAX_PATTERN_LEN} characters", pattern=pattern
+        )
+    flags = re.IGNORECASE if ignore_case else 0
+    try:
+        return re.compile(pattern if regex else re.escape(pattern), flags)
+    except re.error as exc:
+        raise InvalidPatternError(f"invalid regular expression: {exc}", pattern=pattern) from None
+
+
 def search(
     repo: Repo,
     pattern: str,
@@ -271,15 +284,7 @@ def search(
     max_results: int = 200,
 ) -> SearchResult:
     """Line-based search over the readable files below ``rel_dir``."""
-    if not isinstance(pattern, str) or not pattern or len(pattern) > MAX_PATTERN_LEN:
-        raise InvalidPatternError(
-            f"pattern must be 1..{MAX_PATTERN_LEN} characters", pattern=pattern
-        )
-    flags = re.IGNORECASE if ignore_case else 0
-    try:
-        rx = re.compile(pattern if regex else re.escape(pattern), flags)
-    except re.error as exc:
-        raise InvalidPatternError(f"invalid regular expression: {exc}", pattern=pattern) from None
+    rx = compile_pattern(pattern, regex=regex, ignore_case=ignore_case)
     limit = max(1, min(int(max_results), 1000))
     matches: list[SearchMatch] = []
     for entry in list_files(repo, rel_dir):

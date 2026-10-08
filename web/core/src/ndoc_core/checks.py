@@ -12,14 +12,14 @@ from __future__ import annotations
 
 import csv
 import re
-import shutil
 import subprocess
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 
-from . import docs, files
+from . import docs, files, pdf
+from .errors import ToolMissingError
 from .repo import Repo
 from .texutil import line_col, strip_comments
 
@@ -431,15 +431,6 @@ def check_pdf_sanity(
         pdfs = [d.pdf_file for d in docs.list_documents(repo) if d.pdf_exists]
     pdfs = list(pdfs)
     report = CheckReport(checked=pdfs)
-    if shutil.which("pdftotext") is None:
-        report.issues.append(
-            Issue(
-                code="tool_missing",
-                severity="warning",
-                message="pdftotext not installed; PDF sanity check skipped",
-            )
-        )
-        return report
     for rel in pdfs:
         path = (repo.root / rel).resolve()
         if not path.is_relative_to(repo.root) or path.suffix != ".pdf" or not path.is_file():
@@ -447,15 +438,18 @@ def check_pdf_sanity(
                 Issue(code="missing_pdf", severity="warning", message="PDF not found", path=rel)
             )
             continue
-        proc = subprocess.run(
-            ["pdftotext", "-layout", str(path), "-"],
-            capture_output=True,
-            text=True,
-            errors="replace",
-            timeout=timeout,
-            check=False,
-        )
-        for page, page_text in enumerate(proc.stdout.split("\f"), start=1):
+        try:
+            pages = pdf.page_texts(path, layout=True, timeout=timeout)
+        except ToolMissingError:
+            report.issues.append(
+                Issue(
+                    code="tool_missing",
+                    severity="warning",
+                    message="pdftotext not installed; PDF sanity check skipped",
+                )
+            )
+            return report
+        for page, page_text in enumerate(pages, start=1):
             for line in page_text.splitlines():
                 for pattern in _SANITY_PATTERNS:
                     if pattern in line:

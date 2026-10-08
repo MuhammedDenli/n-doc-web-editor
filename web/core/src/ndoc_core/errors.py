@@ -61,6 +61,12 @@ class InvalidPatternError(CoreError):
     code = "invalid_pattern"
 
 
+class ToolMissingError(CoreError):
+    """A host tool the operation needs (e.g. ``pdftotext``) is not installed."""
+
+    code = "tool_missing"
+
+
 class LockTimeoutError(CoreError):
     code = "lock_timeout"
 
