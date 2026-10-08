@@ -48,6 +48,12 @@ React UI, and a Claude agent. `.tex` and `common/db/*.csv` stay the source of tr
 - Consistency checks: `scripts/check_sfr_consistency.sh` (CSV),
   `scripts/sanity_check.sh` (scans built PDFs for "is undefined" / "To Do").
 
-## Tests
+## Tests (web/core)
 
-_Added in Phase 1._
+- `cd web/core && uv sync` once; then `uv run pytest -q` (fast, no Docker).
+- `uv run pytest -q -m docker`: real container builds of a fixture copy (~40 s).
+- `uv run ruff check . && uv run ruff format .` (a PostToolUse hook formats
+  edited `web/core/**/*.py` automatically).
+- Fixtures copy tracked files of this checkout into a temp git repo
+  (`tests/conftest.py`); tests never touch the real working tree, except the
+  read-only baseline that all real documents pass the reference checks.
