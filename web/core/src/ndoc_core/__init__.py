@@ -2,6 +2,7 @@
 
 Modules: ``files`` (path guard, read/write), ``docs`` (documents, \\input tree),
 ``build`` (containerized make), ``checks`` (LaTeX + reference + CSV checks),
+``csvdata`` (CSV schema, row edits, key validation),
 ``git`` (non-destructive Git). All take a :class:`Repo` as first argument.
 """
 

@@ -168,6 +168,14 @@ def log(repo: Repo, limit: int = 20, path: str | None = None) -> list[Commit]:
     return commits
 
 
+def show_file(repo: Repo, rev: str, rel: str) -> str | None:
+    """Content of ``rel`` at revision ``rev``, or None if it does not exist there."""
+    rev = _validate_rev(repo, rev)
+    (path,) = _guard_paths(repo, [rel])
+    proc = _git(repo, "show", f"{rev}:{path}", check=False)
+    return proc.stdout if proc.returncode == 0 else None
+
+
 def validate_branch_name(repo: Repo, name: str) -> str:
     if (
         not isinstance(name, str)

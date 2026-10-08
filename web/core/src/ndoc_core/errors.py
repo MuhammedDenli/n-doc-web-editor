@@ -97,3 +97,33 @@ class InvalidBranchNameError(CoreError):
 
 class DirtyWorktreeError(CoreError):
     code = "dirty_worktree"
+
+
+class UnknownTableError(CoreError):
+    code = "unknown_table"
+
+
+class RowNotFoundError(CoreError):
+    code = "row_not_found"
+
+
+class InvalidValueError(CoreError):
+    """A CSV value or column set the table cannot hold."""
+
+    code = "invalid_value"
+
+
+class DuplicateKeyError(CoreError):
+    code = "duplicate_key"
+
+
+class ForeignKeyError(CoreError):
+    """A row would reference a key that does not exist."""
+
+    code = "foreign_key_violation"
+
+
+class ReferencedRowError(CoreError):
+    """The row (or its key) is still referenced by rows of other tables."""
+
+    code = "row_referenced"

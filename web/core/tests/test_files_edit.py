@@ -90,3 +90,13 @@ def test_search_respects_path_policy(repo):
 def test_search_invalid_pattern(repo, bad):
     with pytest.raises(InvalidPatternError):
         files.search(repo, bad, regex=True)
+
+
+def test_write_many_checks_all_hashes_first(repo):
+    a, b = files.read_file(repo, EXTRA), files.read_file(repo, BODY)
+    with pytest.raises(StaleWriteError):
+        files.write_many(repo, {EXTRA: ("new\n", a.sha256), BODY: ("new\n", "0" * 64)})
+    assert files.read_file(repo, EXTRA).text == a.text
+    res = files.write_many(repo, {EXTRA: ("x\n", a.sha256), BODY: ("y\n", b.sha256)})
+    assert [r.path for r in res] == [EXTRA, BODY]
+    assert (repo.root / BODY).read_text(encoding="utf-8") == "y\n"

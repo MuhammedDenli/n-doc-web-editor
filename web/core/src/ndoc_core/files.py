@@ -258,6 +258,42 @@ def replace_text(
     )
 
 
+def write_many(repo: Repo, changes: dict[str, tuple[str, str]]) -> list[WriteResult]:
+    """Atomically replace several existing files: ``{rel: (text, expected_hash)}``.
+
+    All hashes are verified under one lock before anything is written; if a
+    write fails, the files already written are restored to their old bytes.
+    """
+    planned: list[tuple[str, Path, bytes, bytes]] = []
+    for rel, (text, _expected) in changes.items():
+        path = resolve_path(repo, rel, "write")
+        planned.append((rel, path, _encode(text, rel), b""))
+    with repo.lock(WRITE_LOCK):
+        for i, (rel, path, data, _) in enumerate(planned):
+            if path.exists() and not path.is_file():
+                raise PathNotAllowedError("not a regular file", path=rel)
+            old = _read_bytes(path, rel)
+            current = sha256_bytes(old)
+            if changes[rel][1] != current:
+                raise StaleWriteError(
+                    "file changed since it was read", path=rel, current_hash=current
+                )
+            planned[i] = (rel, path, data, old)
+        written: list[tuple[Path, bytes]] = []
+        try:
+            for _, path, data, old in planned:
+                _atomic_write(path, data)
+                written.append((path, old))
+        except BaseException:
+            for path, old in reversed(written):
+                _atomic_write(path, old)
+            raise
+    return [
+        WriteResult(path=_rel(repo, path), sha256=sha256_bytes(data), size=len(data), created=False)
+        for _, path, data, _ in planned
+    ]
+
+
 MAX_PATTERN_LEN = 500
 
 

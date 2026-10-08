@@ -8,12 +8,13 @@ are `CoreError` subclasses with a stable `code`.
 | Module | Purpose |
 |---|---|
 | `repo` | `Repo(root, host_root=None)`, inter-process locks (state in `.git/ndoc-web/`) |
-| `files` | path guard (`resolve_path`), `read_file` → text + SHA-256, atomic `write_file(expected_hash=…)`, `replace_text` (unique match), `search`, `list_files` |
+| `files` | path guard (`resolve_path`), `read_file` → text + SHA-256, atomic `write_file(expected_hash=…)`, `write_many` (all-or-nothing), `replace_text` (unique match), `search`, `list_files` |
 | `docs` | documents from `PDF_DIRS`/`MWE_DIRS`, `\input` tree, `document_files`, `pdf_path` |
 | `build` | allow-listed `make` targets in `ndesign/n-doc:<version>`, one build at a time, timeout kills the container, log tail + error lines + updated PDFs |
 | `checks` | brace/env sanity, reference macros vs `common/db` (`\sfrlink`, `\tdslink`, …), `check_sfr_consistency.sh` wrapper, PDF "is undefined"/"To Do" scan |
 | `pdf` | `pdftotext` page texts, `search_pdf` by document name (wrap-insensitive, `stale` flag) |
-| `git` | status, diff, log, branch create/switch, commit of explicit paths; no reset/force/push; `main`/`master` protected |
+| `csvdata` | `common/db` schema (Lua + `create_tables.sql`, composite FKs, `bundles.NAME` alias), `list_tables`/`read_table`/`lookup`, line-preserving `insert_row`/`update_row`/`delete_row` that refuse new key violations, `rename_key` (cascades to referencing rows, lists `.tex` references), `validate_db` (new violations vs `HEAD` are errors) |
+| `git` | status, diff, log, branch create/switch, commit of explicit paths, `show_file`; no reset/force/push; `main`/`master` protected |
 
 Path policy: no absolute paths, `..`, hidden entries or `web/`; symlink targets
 must pass the same policy. Writable: `.tex .csv .bib .md .txt`, not in
