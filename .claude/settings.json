@@ -8,7 +8,22 @@
       "Bash(uv run pytest*)",
       "Bash(uv run ruff*)",
       "Bash(uv run --directory web/core *)",
-      "Bash(cd web/core && uv run *)"
+      "Bash(cd web/core && uv run *)",
+      "Bash(uv run --directory web/mcp *)",
+      "Bash(cd web/mcp && uv run *)",
+      "mcp__ndoc__list_documents",
+      "mcp__ndoc__document_tree",
+      "mcp__ndoc__list_files",
+      "mcp__ndoc__search",
+      "mcp__ndoc__read_file",
+      "mcp__ndoc__edit_file",
+      "mcp__ndoc__write_file",
+      "mcp__ndoc__run_checks",
+      "mcp__ndoc__run_build",
+      "mcp__ndoc__list_build_targets",
+      "mcp__ndoc__git_status",
+      "mcp__ndoc__git_diff",
+      "mcp__ndoc__git_log"
     ],
     "deny": [
       "Bash(git push --force*)",
@@ -27,11 +42,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '.tool_response.filePath // .tool_input.file_path' | { read -r f; case \"$f\" in */web/core/*.py) uv run --quiet --directory \"$CLAUDE_PROJECT_DIR/web/core\" ruff format \"$f\";; esac; } 2>/dev/null || true",
+            "command": "jq -r '.tool_response.filePath // .tool_input.file_path' | { read -r f; case \"$f\" in */web/core/*.py|*/web/mcp/*.py) p=\"${f#\"$CLAUDE_PROJECT_DIR\"/web/}\"; uv run --quiet --directory \"$CLAUDE_PROJECT_DIR/web/${p%%/*}\" ruff format \"$f\";; esac; } 2>/dev/null || true",
             "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "jq -r '.tool_response.filePath // .tool_input.file_path' | { read -r f; case \"$f\" in *.tex|*/common/db/*.csv) uv run --quiet --project \"$CLAUDE_PROJECT_DIR/web/mcp\" ndoc-check \"$f\";; esac; }",
+            "timeout": 120
           }
         ]
       }
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "ndoc"
+  ]
 }

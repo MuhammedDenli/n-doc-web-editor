@@ -48,12 +48,30 @@ React UI, and a Claude agent. `.tex` and `common/db/*.csv` stay the source of tr
 - Consistency checks: `scripts/check_sfr_consistency.sh` (CSV),
   `scripts/sanity_check.sh` (scans built PDFs for "is undefined" / "To Do").
 
+## Editing n-doc content (agent workflow)
+
+For changes to documents or `common/db` data use the `ndoc` MCP tools
+(`web/mcp`), not shell commands or ad-hoc scripts:
+
+1. `git_status`; on `main` or a shared `feature/*` branch, `git_create_branch`
+   (`agent/<topic>`) first.
+2. Locate with `search`, `document_tree`, `read_file`; check labels in the CSV
+   before using a reference macro.
+3. Change with `edit_file` (preferred) or `write_file`; both return check results.
+4. `run_checks`, then `run_build` for the affected document.
+5. `git_diff` must show only the intended lines; then `git_commit` with explicit paths.
+
+A native Write/Edit of `.tex` or `common/db/*.csv` triggers `ndoc-check` via a
+hook; fix every error it reports.
+
 ## Tests (web/core)
 
 - `cd web/core && uv sync` once; then `uv run pytest -q` (fast, no Docker).
 - `uv run pytest -q -m docker`: real container builds of a fixture copy (~40 s).
 - `uv run ruff check . && uv run ruff format .` (a PostToolUse hook formats
-  edited `web/core/**/*.py` automatically).
+  edited `web/core` and `web/mcp` Python files automatically).
+- `web/mcp` works the same way (`cd web/mcp && uv sync`, `uv run pytest -q`,
+  `-m docker`); its tests reuse the core fixtures.
 - Fixtures copy tracked files of this checkout into a temp git repo
   (`tests/conftest.py`); tests never touch the real working tree, except the
   read-only baseline that all real documents pass the reference checks.

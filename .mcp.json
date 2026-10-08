@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "ndoc": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "--quiet", "--project", "${CLAUDE_PROJECT_DIR:-.}/web/mcp", "ndoc-mcp"]
+    }
+  }
+}
