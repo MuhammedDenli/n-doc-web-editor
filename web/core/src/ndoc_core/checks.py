@@ -10,15 +10,13 @@
 
 from __future__ import annotations
 
-import csv
 import re
 import subprocess
 from collections.abc import Iterable
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Literal
 
-from . import docs, files, pdf
+from . import csvdata, docs, files, pdf
 from .errors import ToolMissingError
 from .repo import Repo
 from .texutil import line_col, strip_comments
@@ -243,16 +241,16 @@ class ReferenceIndex:
 
     @classmethod
     def load(cls, repo: Repo) -> ReferenceIndex:
-        db = repo.root / repo.db_dir
+        def rows(name: str) -> list[dict[str, str]]:
+            return csvdata.read_csv_rows(repo, f"{repo.db_dir}/{name}")
+
         simple = {
-            kind: {row[col].strip().lower() for row in _read_csv(db / name) if row.get(col)}
+            kind: {row[col].strip().lower() for row in rows(name) if row.get(col)}
             for kind, (name, col) in _SIMPLE_TABLES.items()
         }
-        subsystems = {r["label"] for r in _read_csv(db / "subsystems.csv")}
-        modules = {(r["subsystem"], r["label"]) for r in _read_csv(db / "modules.csv")}
-        interfaces = {
-            (r["subsystem"], r["module"], r["label"]) for r in _read_csv(db / "interfaces.csv")
-        }
+        subsystems = {r["label"] for r in rows("subsystems.csv")}
+        modules = {(r["subsystem"], r["label"]) for r in rows("modules.csv")}
+        interfaces = {(r["subsystem"], r["module"], r["label"]) for r in rows("interfaces.csv")}
         return cls(simple, subsystems, modules, interfaces)
 
     def resolves(self, kind: str, key: str) -> bool:
@@ -275,13 +273,6 @@ class ReferenceIndex:
                 and tuple(rest) in self.interfaces
             )
         return False
-
-
-def _read_csv(path: Path) -> list[dict[str, str]]:
-    if not path.is_file():
-        return []
-    with path.open(encoding="utf-8", newline="") as fh:
-        return list(csv.DictReader(fh, delimiter=";"))
 
 
 def find_references(text: str) -> list[Reference]:
