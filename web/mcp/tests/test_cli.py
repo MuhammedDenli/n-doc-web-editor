@@ -35,3 +35,16 @@ def test_csv_runs_sfr_consistency(repo, capsys):
     sfr_module.write_text(sfr_module.read_text() + "fxx_yyy.1;vpn;core\n", encoding="utf-8")
     assert cli.run(["common/db/sfr_module.csv"]) == 2
     assert "sfr_inconsistent" in capsys.readouterr().err
+
+
+def test_csv_foreign_key_violation_exits_2(repo, capsys):
+    sfr_obj = repo.root / "common/db/sfr_obj.csv"
+    sfr_obj.write_text(sfr_obj.read_text() + "fcs_ckm.1;o.nosuch\n", encoding="utf-8")
+    assert cli.run(["common/db/sfr_obj.csv"]) == 2
+    err = capsys.readouterr().err
+    assert "[csv_foreign_key]" in err and "o.nosuch" in err
+    assert "found 1 error(s)" in err  # the (nn, nn) row already at HEAD is only a warning
+
+
+def test_unchanged_csv_passes(repo, capsys):
+    assert cli.run(["common/db/interfaces.csv"]) == 0

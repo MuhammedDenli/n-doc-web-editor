@@ -19,7 +19,7 @@ from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
-from ndoc_core import CoreError, Repo, build, checks, docs, files, git, pdf
+from ndoc_core import CoreError, Repo, build, checks, csvdata, docs, files, git, pdf
 
 INSTRUCTIONS = """\
 Tools for editing an n-doc repository: Common Criteria documents written in LaTeX,
@@ -41,8 +41,12 @@ n-doc rules:
 - Reference macros (\\sfrlink{...}, \\tdslink{mod.<subsystem>.<module>},
   \\tsfilink, \\secitem, ...) must resolve to rows in common/db; run_checks
   reports unresolved ones. Do not invent labels: search the CSV first.
-- CSV files use ';' as delimiter; edit them line by line with edit_file and keep
-  the trailing-newline state of the file unchanged.
+- Change common/db/*.csv with the csv_* tools (csv_tables, csv_read, csv_lookup,
+  csv_insert, csv_update, csv_delete): they keep every other byte of the file and
+  refuse duplicate keys and unresolved foreign keys. A referenced row cannot be
+  deleted or have its key changed; csv_rename_key renames a key together with all
+  referencing CSV rows and lists the .tex references (with their replacement) to
+  update afterwards with edit_file. Use edit_file on CSV only as a last resort.
 - Build targets: all delivery st fsp tds arc ate ref db mwe clean, or a document
   directory name (ase, adv_tds, mwe_tds, ...). The ST alias is "st", its directory "ase".
 """
@@ -88,8 +92,16 @@ def _checks_after_write(repo: Repo, path: str) -> dict[str, Any] | None:
     if path.endswith(".tex"):
         return _report(checks.check_files(repo, [path]))
     if path.startswith(f"{repo.db_dir}/") and path.endswith(".csv"):
-        return _report(checks.check_sfr_consistency(repo))
+        return _db_report(repo)
     return None
+
+
+def _db_checks(repo: Repo) -> checks.CheckReport:
+    return csvdata.validate_db(repo).extend(checks.check_sfr_consistency(repo))
+
+
+def _db_report(repo: Repo) -> dict[str, Any]:
+    return _report(_db_checks(repo))
 
 
 def _changed_paths(repo: Repo) -> list[str]:
@@ -221,10 +233,83 @@ def create_server(repo: Repo) -> MCPServer:
                 p.startswith(f"{repo.db_dir}/") and p.endswith(".csv") for p in scope
             )
         if sfr_consistency:
-            report.extend(checks.check_sfr_consistency(repo))
+            report.extend(_db_checks(repo))
         if pdfs:
             report.extend(checks.check_pdf_sanity(repo, pdfs))
         return _report(report)
+
+    # ------------------------------------------------------------------- csv
+
+    @tool(READ_ONLY)
+    def csv_tables() -> list[dict[str, Any]]:
+        """Tables in common/db: CSV path, columns (header order), primary key,
+        foreign keys (composite ones included) and row count."""
+        return [_plain(t) for t in csvdata.list_tables(repo)]
+
+    @tool(READ_ONLY)
+    def csv_read(
+        table: str, where: dict[str, str] | None = None, limit: int = 200
+    ) -> dict[str, Any]:
+        """Rows of a table (e.g. "modules"), optionally only those whose columns
+        equal the values in where. Each row has its file line number. Returns
+        sha256 for expected_sha256."""
+        return _plain(csvdata.read_table(repo, table, where, limit))
+
+    @tool(READ_ONLY)
+    def csv_lookup(table: str, column: str, prefix: str = "", limit: int = 50) -> list[dict]:
+        """Allowed values for table.column: for a foreign key column the
+        referenced rows (value, name, full key), else the existing values."""
+        return [_plain(o) for o in csvdata.lookup(repo, table, column, prefix, limit)]
+
+    @tool(WRITES)
+    def csv_insert(
+        table: str, values: dict[str, str], expected_sha256: str | None = None
+    ) -> dict[str, Any]:
+        """Append a row (columns left out are empty). Values are stored exactly
+        as given, LaTeX escapes included. Refused on duplicate primary key or
+        unresolved foreign key. Returns the row, its line and check results."""
+        out = _plain(csvdata.insert_row(repo, table, values, expected_hash=expected_sha256))
+        out["checks"] = _db_report(repo)
+        return out
+
+    @tool(WRITES)
+    def csv_update(
+        table: str,
+        match: dict[str, str],
+        values: dict[str, str],
+        expected_sha256: str | None = None,
+    ) -> dict[str, Any]:
+        """Change columns of the one row whose columns equal match (the primary
+        key, or the whole row for tables without one). Only that line of the file
+        changes. A key that other rows reference cannot change: use csv_rename_key."""
+        out = _plain(csvdata.update_row(repo, table, match, values, expected_hash=expected_sha256))
+        out["checks"] = _db_report(repo)
+        return out
+
+    @tool(WRITES)
+    def csv_delete(
+        table: str, match: dict[str, str], expected_sha256: str | None = None
+    ) -> dict[str, Any]:
+        """Delete the one row matching match. Refused while rows of other tables
+        reference it (the error lists them in referenced_by)."""
+        out = _plain(csvdata.delete_row(repo, table, match, expected_hash=expected_sha256))
+        out["checks"] = _db_report(repo)
+        return out
+
+    @tool(WRITES)
+    def csv_rename_key(
+        table: str,
+        match: dict[str, str],
+        new_key: dict[str, str],
+        expected_sha256: str | None = None,
+    ) -> dict[str, Any]:
+        """Rename the primary key of one row (e.g. modules {subsystem: vpn,
+        label: core} -> {label: engine}) and every CSV row referencing it, in one
+        atomic write. .tex files are not changed: tex_references lists each
+        reference macro using the old key with its replacement key."""
+        out = _plain(csvdata.rename_key(repo, table, match, new_key, expected_hash=expected_sha256))
+        out["checks"] = _db_report(repo)
+        return out
 
     # ----------------------------------------------------------------- build
 

@@ -2,8 +2,10 @@
 
 Used by the Claude Code PostToolUse hook after a native Write/Edit. Files that
 are not n-doc content (outside the repo, denied by the path policy, not .tex or
-CSV data) are ignored. Errors go to stderr with exit code 2, which Claude Code
-feeds back to the model; warnings alone exit 0.
+CSV data) are ignored. CSV edits also run the key/foreign key check; only
+violations that are not already at HEAD count as errors. Errors go to stderr
+with exit code 2, which Claude Code feeds back to the model; warnings alone
+exit 0.
 """
 
 from __future__ import annotations
@@ -11,7 +13,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from ndoc_core import CoreError, Repo, checks, files
+from ndoc_core import CoreError, Repo, checks, csvdata, files
 
 from .server import find_repo_root
 
@@ -37,7 +39,7 @@ def run(argv: list[str]) -> int:
     try:
         report = checks.check_files(repo, tex)
         if csv:
-            report.extend(checks.check_sfr_consistency(repo))
+            report.extend(csvdata.validate_db(repo)).extend(checks.check_sfr_consistency(repo))
     except CoreError as exc:
         print(f"ndoc-check: {exc.code}: {exc.message}", file=sys.stderr)
         return 2

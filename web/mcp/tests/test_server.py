@@ -18,6 +18,13 @@ EXPECTED_TOOLS = {
     "edit_file",
     "write_file",
     "run_checks",
+    "csv_tables",
+    "csv_read",
+    "csv_lookup",
+    "csv_insert",
+    "csv_update",
+    "csv_delete",
+    "csv_rename_key",
     "run_build",
     "list_build_targets",
     "pdf_search",
@@ -175,3 +182,48 @@ async def test_run_build_real(client):
     assert res["pdf_checks"]["checked"] == ["mwe_tds/mwe_tds.pdf"]
     found = await call(client, "pdf_search", document="mwe_tds", pattern="Extra text.")
     assert not found["stale"] and found["matches"]
+
+
+async def test_csv_read_update_and_checks(client, repo):
+    table = await call(client, "csv_read", table="sf", where={"label": "sf.administration"})
+    assert table["rows"][0]["values"]["name"] == r"SF.Ad\-mi\-ni\-stra\-tion"
+    res = await call(
+        client,
+        "csv_update",
+        table="sf",
+        match={"label": "sf.administration"},
+        values={"description": "Administration of the TOE"},
+        expected_sha256=table["sha256"],
+    )
+    assert res["line"] == table["rows"][0]["line"]
+    assert res["checks"]["ok"], res["checks"]
+    assert "sf.administration;SF.Ad\\-mi\\-ni\\-stra\\-tion;Administration of the TOE\n" in (
+        repo.root / "common/db/sf.csv"
+    ).read_text(encoding="utf-8")
+
+
+async def test_csv_delete_referenced_is_refused(client, repo):
+    before = (repo.root / "common/db/sfr.csv").read_bytes()
+    err = await call_error(client, "csv_delete", table="sfr", match={"label": "fcs_ckm.1"})
+    assert err["code"] == "row_referenced"
+    assert any(r["table"] == "sfr_obj" for r in err["referenced_by"])
+    assert (repo.root / "common/db/sfr.csv").read_bytes() == before
+
+
+async def test_csv_tables_lookup_and_rename(client):
+    tables = {t["name"]: t for t in await call(client, "csv_tables")}
+    assert tables["modules"]["primary_key"] == ["subsystem", "label"]
+    opts = await call(client, "csv_lookup", table="interfaces", column="module")
+    assert {"subsystem": "vpn", "module": "core"} in [o["key"] for o in opts]
+    res = await call(
+        client,
+        "csv_rename_key",
+        table="modules",
+        match={"subsystem": "vpn", "label": "core"},
+        new_key={"label": "engine"},
+    )
+    assert res["new_key"] == {"subsystem": "vpn", "label": "engine"}
+    assert any(r["replacement"] == "mod.vpn.engine" for r in res["tex_references"])
+    assert res["checks"]["ok"]
+    err = await call_error(client, "csv_insert", table="sfr", values={"label": "fcs_ckm.1"})
+    assert err["code"] == "duplicate_key"

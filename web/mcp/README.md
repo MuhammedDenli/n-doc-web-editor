@@ -11,7 +11,10 @@ tool error whose text ends in `{"code": ..., "message": ..., ...}`.
 | `list_files`, `search`, `read_file` | `files` | `read_file` returns `sha256` |
 | `edit_file` | `files.replace_text` | unique match unless `replace_all`; returns checks |
 | `write_file` | `files.write_file` | needs `expected_sha256` (or `create`); returns checks |
-| `run_checks` | `checks` | default scope: changed files; SFR consistency when CSV changed |
+| `run_checks` | `checks`, `csvdata.validate_db` | default scope: changed files; key/FK check (new violations since `HEAD` are errors) + SFR consistency when CSV changed |
+| `csv_tables`, `csv_read`, `csv_lookup` | `csvdata` | schema with composite FKs; rows with line numbers + `sha256`; FK select values |
+| `csv_insert`, `csv_update`, `csv_delete` | `csvdata` | one line changes, rest byte-exact; refuses duplicate keys, broken FKs, deleting referenced rows |
+| `csv_rename_key` | `csvdata.rename_key` | key + all referencing CSV rows in one atomic write; returns `tex_references` to fix |
 | `run_build`, `list_build_targets` | `build` | allow-listed targets; scans produced PDFs |
 | `pdf_search` | `pdf` | text in a document's built PDF, wrap-insensitive; `stale` if sources are newer |
 | `git_status`, `git_diff`, `git_log` | `git` | read-only |
@@ -25,7 +28,7 @@ for builds through a host `docker.sock`.
 
 `/.mcp.json` registers the server as `ndoc` (`uv run --project web/mcp ndoc-mcp`);
 `.claude/settings.json` enables it, pre-approves the read/edit/check/build
-tools (branch and commit tools still ask) and runs `ndoc-check <file>` after a
+tools, CSV tools included (branch and commit tools still ask) and runs `ndoc-check <file>` after a
 native Write/Edit of a `.tex` or `common/db/*.csv` file: check errors are fed
 back to the model (exit 2).
 

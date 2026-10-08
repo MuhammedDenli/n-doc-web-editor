@@ -57,7 +57,11 @@ For changes to documents or `common/db` data use the `ndoc` MCP tools
    (`agent/<topic>`) first.
 2. Locate with `search`, `document_tree`, `read_file`; check labels in the CSV
    before using a reference macro.
-3. Change with `edit_file` (preferred) or `write_file`; both return check results.
+3. Change `.tex` with `edit_file` (preferred) or `write_file`; both return check results.
+   Change `common/db` with `csv_insert`/`csv_update`/`csv_delete` (`csv_tables`,
+   `csv_read`, `csv_lookup` to inspect): they keep all other bytes and refuse
+   duplicate keys and broken (composite) foreign keys. To rename a referenced key
+   use `csv_rename_key`, then fix every entry of its `tex_references` with `edit_file`.
 4. `run_checks`, then `run_build` for the affected document; `pdf_search`
    confirms the change is in the PDF (no shell `pdftotext`).
 5. `git_diff` must show only the intended lines; then `git_commit` with explicit paths.
