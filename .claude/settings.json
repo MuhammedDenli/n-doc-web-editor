@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(./runmake.sh *)"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git reset --hard*)",
+      "Bash(rm -rf*)",
+      "Bash(./scripts/remove_document.sh*)",
+      "Bash(scripts/remove_document.sh*)",
+      "Bash(bash scripts/remove_document.sh*)"
+    ]
+  }
+}
