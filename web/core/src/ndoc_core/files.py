@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import re
 import stat
 import tempfile
 from dataclasses import dataclass
@@ -20,12 +21,15 @@ from pathlib import Path, PurePosixPath
 from typing import Literal
 
 from .errors import (
+    AmbiguousMatchError,
     FileExistsInRepoError,
     FileNotFoundInRepoError,
     FileTooLargeError,
     InvalidContentError,
+    InvalidPatternError,
     PathNotAllowedError,
     StaleWriteError,
+    TextNotFoundError,
 )
 from .repo import Repo
 
@@ -60,6 +64,21 @@ class WriteResult:
     sha256: str
     size: int
     created: bool
+    replacements: int | None = None  # set by replace_text
+
+
+@dataclass(frozen=True)
+class SearchMatch:
+    path: str
+    line: int
+    col: int
+    text: str
+
+
+@dataclass
+class SearchResult:
+    matches: list[SearchMatch]
+    truncated: bool
 
 
 @dataclass(frozen=True)
@@ -186,6 +205,99 @@ def write_file(
     return WriteResult(
         path=_rel(repo, path), sha256=sha256_bytes(data), size=len(data), created=not exists
     )
+
+
+def replace_text(
+    repo: Repo,
+    rel: str,
+    old: str,
+    new: str,
+    *,
+    expected_hash: str | None = None,
+    replace_all: bool = False,
+) -> WriteResult:
+    """Replace ``old`` by ``new`` in an existing file, atomically.
+
+    ``old`` must occur exactly once unless ``replace_all`` is set, so an edit
+    based on an outdated view of the file fails instead of hitting the wrong
+    place. ``expected_hash``, if given, must match the current content.
+    """
+    path = resolve_path(repo, rel, "write")
+    if not isinstance(old, str) or not old:
+        raise InvalidContentError("text to replace must not be empty", path=rel)
+    if old == new:
+        raise InvalidContentError("replacement is identical to the original text", path=rel)
+    with repo.lock(WRITE_LOCK):
+        if path.exists() and not path.is_file():
+            raise PathNotAllowedError("not a regular file", path=rel)
+        data = _read_bytes(path, rel)
+        current = sha256_bytes(data)
+        if expected_hash is not None and expected_hash != current:
+            raise StaleWriteError("file changed since it was read", path=rel, current_hash=current)
+        try:
+            text = data.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise InvalidContentError("file is not valid UTF-8", path=rel) from exc
+        count = text.count(old)
+        if count == 0:
+            raise TextNotFoundError("text to replace not found", path=rel)
+        if count > 1 and not replace_all:
+            raise AmbiguousMatchError(
+                f"text to replace occurs {count} times; add context or set replace_all",
+                path=rel,
+                occurrences=count,
+            )
+        out = _encode(text.replace(old, new), rel)
+        _atomic_write(path, out)
+    return WriteResult(
+        path=_rel(repo, path),
+        sha256=sha256_bytes(out),
+        size=len(out),
+        created=False,
+        replacements=count,
+    )
+
+
+MAX_PATTERN_LEN = 500
+
+
+def search(
+    repo: Repo,
+    pattern: str,
+    *,
+    rel_dir: str = "",
+    regex: bool = False,
+    ignore_case: bool = False,
+    max_results: int = 200,
+) -> SearchResult:
+    """Line-based search over the readable files below ``rel_dir``."""
+    if not isinstance(pattern, str) or not pattern or len(pattern) > MAX_PATTERN_LEN:
+        raise InvalidPatternError(
+            f"pattern must be 1..{MAX_PATTERN_LEN} characters", pattern=pattern
+        )
+    flags = re.IGNORECASE if ignore_case else 0
+    try:
+        rx = re.compile(pattern if regex else re.escape(pattern), flags)
+    except re.error as exc:
+        raise InvalidPatternError(f"invalid regular expression: {exc}", pattern=pattern) from None
+    limit = max(1, min(int(max_results), 1000))
+    matches: list[SearchMatch] = []
+    for entry in list_files(repo, rel_dir):
+        if entry.size > MAX_FILE_BYTES:
+            continue
+        try:
+            text = (repo.root / entry.path).read_bytes().decode("utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            m = rx.search(line)
+            if m:
+                if len(matches) >= limit:
+                    return SearchResult(matches=matches, truncated=True)
+                matches.append(
+                    SearchMatch(path=entry.path, line=lineno, col=m.start() + 1, text=line[:300])
+                )
+    return SearchResult(matches=matches, truncated=False)
 
 
 def list_files(repo: Repo, rel_dir: str = "") -> list[FileEntry]:

@@ -45,6 +45,22 @@ class InvalidContentError(CoreError):
     code = "invalid_content"
 
 
+class TextNotFoundError(CoreError):
+    """``replace_text``: the text to replace does not occur in the file."""
+
+    code = "text_not_found"
+
+
+class AmbiguousMatchError(CoreError):
+    """``replace_text``: the text occurs more than once and replace_all is off."""
+
+    code = "ambiguous_match"
+
+
+class InvalidPatternError(CoreError):
+    code = "invalid_pattern"
+
+
 class LockTimeoutError(CoreError):
     code = "lock_timeout"
 

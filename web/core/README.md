@@ -8,7 +8,7 @@ are `CoreError` subclasses with a stable `code`.
 | Module | Purpose |
 |---|---|
 | `repo` | `Repo(root, host_root=None)`, inter-process locks (state in `.git/ndoc-web/`) |
-| `files` | path guard (`resolve_path`), `read_file` → text + SHA-256, atomic `write_file(expected_hash=…)`, `list_files` |
+| `files` | path guard (`resolve_path`), `read_file` → text + SHA-256, atomic `write_file(expected_hash=…)`, `replace_text` (unique match), `search`, `list_files` |
 | `docs` | documents from `PDF_DIRS`/`MWE_DIRS`, `\input` tree, `document_files`, `pdf_path` |
 | `build` | allow-listed `make` targets in `ndesign/n-doc:<version>`, one build at a time, timeout kills the container, log tail + error lines + updated PDFs |
 | `checks` | brace/env sanity, reference macros vs `common/db` (`\sfrlink`, `\tdslink`, …), `check_sfr_consistency.sh` wrapper, PDF "is undefined"/"To Do" scan |
