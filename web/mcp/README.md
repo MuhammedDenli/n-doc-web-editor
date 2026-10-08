@@ -13,6 +13,7 @@ tool error whose text ends in `{"code": ..., "message": ..., ...}`.
 | `write_file` | `files.write_file` | needs `expected_sha256` (or `create`); returns checks |
 | `run_checks` | `checks` | default scope: changed files; SFR consistency when CSV changed |
 | `run_build`, `list_build_targets` | `build` | allow-listed targets; scans produced PDFs |
+| `pdf_search` | `pdf` | text in a document's built PDF, wrap-insensitive; `stale` if sources are newer |
 | `git_status`, `git_diff`, `git_log` | `git` | read-only |
 | `git_create_branch`, `git_switch_branch`, `git_commit` | `git` | commits refused on `main`/`master`; no push |
 

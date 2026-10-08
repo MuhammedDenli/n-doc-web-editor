@@ -21,6 +21,7 @@
       "mcp__ndoc__run_checks",
       "mcp__ndoc__run_build",
       "mcp__ndoc__list_build_targets",
+      "mcp__ndoc__pdf_search",
       "mcp__ndoc__git_status",
       "mcp__ndoc__git_diff",
       "mcp__ndoc__git_log"

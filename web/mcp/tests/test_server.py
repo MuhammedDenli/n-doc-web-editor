@@ -20,6 +20,7 @@ EXPECTED_TOOLS = {
     "run_checks",
     "run_build",
     "list_build_targets",
+    "pdf_search",
     "git_status",
     "git_diff",
     "git_log",
@@ -104,6 +105,8 @@ async def test_write_requires_matching_hash(client, repo):
         ("edit_file", {"path": EXTRA, "old_text": "nope", "new_text": "x"}, "text_not_found"),
         ("run_build", {"target": "foo; rm -rf /"}, "build_target_not_allowed"),
         ("document_tree", {"document": "common"}, "unknown_document"),
+        ("pdf_search", {"document": "mwe_tds", "pattern": "x"}, "not_found"),
+        ("pdf_search", {"document": "../ase", "pattern": "x"}, "unknown_document"),
         ("git_create_branch", {"name": "main"}, "protected_branch"),
         ("git_commit", {"message": "m", "paths": [".git/config"]}, "path_not_allowed"),
     ],
@@ -154,9 +157,21 @@ async def test_build_targets(client):
     assert {"tds", "st", "mwe_tds", "clean"} <= set(targets)
 
 
+async def test_pdf_search(client, repo, monkeypatch):
+    from ndoc_core import pdf
+
+    (repo.root / "mwe_tds/mwe_tds.pdf").write_bytes(b"%PDF-1.5\n")
+    monkeypatch.setattr(pdf, "page_texts", lambda *a, **k: ["Cover\n", "Only TLS\n1.3 here.\n"])
+    res = await call(client, "pdf_search", document="mwe_tds", pattern="Only TLS 1.3")
+    assert res["pages"] == 2
+    assert [m["page"] for m in res["matches"]] == [2]
+
+
 @pytest.mark.docker
 async def test_run_build_real(client):
     res = await call(client, "run_build", target="mwe_tds")
     assert res["ok"], res["log_tail"]
     assert res["pdfs"] == ["mwe_tds/mwe_tds.pdf"]
     assert res["pdf_checks"]["checked"] == ["mwe_tds/mwe_tds.pdf"]
+    found = await call(client, "pdf_search", document="mwe_tds", pattern="Extra text.")
+    assert not found["stale"] and found["matches"]

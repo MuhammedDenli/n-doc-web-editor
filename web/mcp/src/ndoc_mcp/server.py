@@ -19,7 +19,7 @@ from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
-from ndoc_core import CoreError, Repo, build, checks, docs, files, git
+from ndoc_core import CoreError, Repo, build, checks, docs, files, git, pdf
 
 INSTRUCTIONS = """\
 Tools for editing an n-doc repository: Common Criteria documents written in LaTeX,
@@ -31,7 +31,8 @@ Workflow for a change:
 2. Find the place: list_documents, document_tree, search, read_file.
 3. Change with edit_file (unique text match, preferred) or write_file (whole file,
    pass expected_sha256 from read_file). Both return check results for .tex files.
-4. run_checks, then run_build for the affected document (e.g. "tds", "mwe_tds").
+4. run_checks, then run_build for the affected document (e.g. "tds", "mwe_tds");
+   pdf_search confirms the change reached the PDF.
 5. git_diff to review, then git_commit with the explicit list of changed paths.
 
 n-doc rules:
@@ -245,6 +246,30 @@ def create_server(repo: Repo) -> MCPServer:
     def list_build_targets() -> list[str]:
         """All make targets run_build accepts."""
         return build.allowed_targets(repo)
+
+    @tool(READ_ONLY)
+    def pdf_search(
+        document: str,
+        pattern: str,
+        regex: bool = False,
+        ignore_case: bool = False,
+        max_results: int = 20,
+    ) -> dict[str, Any]:
+        """Search the built PDF of a document (e.g. "adv_tds") for text, to confirm
+        a change reached the output. Line breaks and repeated spaces are ignored,
+        so a sentence is found even when the PDF wraps it. Returns page numbers
+        with snippets; stale=true means a source file is newer than the PDF
+        (run_build first)."""
+        return _plain(
+            pdf.search_pdf(
+                repo,
+                document,
+                pattern,
+                regex=regex,
+                ignore_case=ignore_case,
+                max_results=max_results,
+            )
+        )
 
     # ------------------------------------------------------------------- git
 

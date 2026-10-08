@@ -58,7 +58,8 @@ For changes to documents or `common/db` data use the `ndoc` MCP tools
 2. Locate with `search`, `document_tree`, `read_file`; check labels in the CSV
    before using a reference macro.
 3. Change with `edit_file` (preferred) or `write_file`; both return check results.
-4. `run_checks`, then `run_build` for the affected document.
+4. `run_checks`, then `run_build` for the affected document; `pdf_search`
+   confirms the change is in the PDF (no shell `pdftotext`).
 5. `git_diff` must show only the intended lines; then `git_commit` with explicit paths.
 
 A native Write/Edit of `.tex` or `common/db/*.csv` triggers `ndoc-check` via a
