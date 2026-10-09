@@ -35,5 +35,16 @@ breaking the existing LaTeX/CSV/build semantics.
 
 ## Setup
 
-_To be completed in Phase 7 (`docker compose up`)._
-Requirements: Docker (for the `ndesign/n-doc` build image), Python 3.12+, Node LTS.
+Requirements: Docker (for the `ndesign/n-doc` build image), Python 3.12+ with
+[uv](https://docs.astral.sh/uv/), Node 22 LTS (e.g. via nvm). A single
+`docker compose up` follows in Phase 7; until then, for local development:
+
+```
+cd web/backend && uv sync
+echo 'a long password' | uv run ndoc-api create-user admin --role admin
+uv run ndoc-api serve                     # API on 127.0.0.1:8000, docs at /api/docs
+
+cd web/frontend && npm ci && npm run dev  # UI on http://localhost:5173 (proxies /api)
+```
+
+The API contract is `contracts/openapi.json` (see `contracts/api.md`).

@@ -75,8 +75,24 @@ hook; fix every error it reports.
 - `uv run pytest -q -m docker`: real container builds of a fixture copy (~40 s).
 - `uv run ruff check . && uv run ruff format .` (a PostToolUse hook formats
   edited `web/core` and `web/mcp` Python files automatically).
-- `web/mcp` works the same way (`cd web/mcp && uv sync`, `uv run pytest -q`,
-  `-m docker`); its tests reuse the core fixtures.
+- `web/mcp` and `web/backend` work the same way (`cd web/<pkg> && uv sync`,
+  `uv run pytest -q`, `-m docker`); their tests reuse the core fixtures.
+- `web/backend` (FastAPI, `ndoc-api`): after changing `models.py` or route
+  signatures run `uv run ndoc-api export-openapi` and commit `web/contracts/`
+  first, alone; `tests/test_contract.py` fails while the contract is stale.
+  Local server: `ndoc-api create-user <name> --role admin`, then `ndoc-api serve`.
+
+## Frontend (web/frontend)
+
+- Node 22 LTS via nvm (`~/.nvm`); if `node` is missing in a shell, run
+  `. ~/.nvm/nvm.sh` first.
+- Vite + React + TypeScript; API types are generated from
+  `web/contracts/openapi.json` (`npm run gen:api`), never hand-written.
+- `npm run dev` proxies `/api` to `ndoc-api serve` on 127.0.0.1:8000.
+- `npm run lint`, `npm run typecheck`, `npm test` (Vitest + MSW), `npm run build`.
+  Edited `.ts/.tsx/.css` files are formatted by a Prettier hook.
+- The frontend branch does not change root files (`CLAUDE.md`, `.claude/`);
+  those changes go through `feature/web-backend-mvp`.
 - Fixtures copy tracked files of this checkout into a temp git repo
   (`tests/conftest.py`); tests never touch the real working tree, except the
   read-only baseline that all real documents pass the reference checks.

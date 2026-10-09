@@ -11,6 +11,15 @@
       "Bash(cd web/core && uv run *)",
       "Bash(uv run --directory web/mcp *)",
       "Bash(cd web/mcp && uv run *)",
+      "Bash(uv run --directory web/backend *)",
+      "Bash(cd web/backend && uv run *)",
+      "Bash(npm run *)",
+      "Bash(cd web/frontend && npm run *)",
+      "Bash(npm test*)",
+      "Bash(npx --no-install prettier*)",
+      "Bash(npx --no-install eslint*)",
+      "Bash(npx --no-install vitest*)",
+      "Bash(npx --no-install tsc*)",
       "mcp__ndoc__list_documents",
       "mcp__ndoc__document_tree",
       "mcp__ndoc__list_files",
@@ -50,7 +59,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '.tool_response.filePath // .tool_input.file_path' | { read -r f; case \"$f\" in */web/core/*.py|*/web/mcp/*.py) p=\"${f#\"$CLAUDE_PROJECT_DIR\"/web/}\"; uv run --quiet --directory \"$CLAUDE_PROJECT_DIR/web/${p%%/*}\" ruff format \"$f\";; esac; } 2>/dev/null || true",
+            "command": "jq -r '.tool_response.filePath // .tool_input.file_path' | { read -r f; case \"$f\" in */web/core/*.py|*/web/mcp/*.py|*/web/backend/*.py) p=\"${f#\"$CLAUDE_PROJECT_DIR\"/web/}\"; uv run --quiet --directory \"$CLAUDE_PROJECT_DIR/web/${p%%/*}\" ruff format \"$f\";; esac; } 2>/dev/null || true",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "jq -r '.tool_response.filePath // .tool_input.file_path' | { read -r f; case \"$f\" in */web/frontend/*.ts|*/web/frontend/*.tsx|*/web/frontend/*.css) case \"$f\" in */node_modules/*) exit 0;; esac; command -v npx >/dev/null || . \"${NVM_DIR:-$HOME/.nvm}/nvm.sh\"; cd \"$CLAUDE_PROJECT_DIR/web/frontend\" && npx --no-install prettier --write --log-level warn \"$f\";; esac; } 2>/dev/null || true",
             "timeout": 30
           },
           {
