@@ -20,6 +20,7 @@ from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
 from ndoc_core import CoreError, Repo, build, checks, csvdata, docs, files, git, pdf
+from ndoc_core import repo as repo_module
 
 INSTRUCTIONS = """\
 Tools for editing an n-doc repository: Common Criteria documents written in LaTeX,
@@ -89,27 +90,12 @@ def _report(report: checks.CheckReport) -> dict[str, Any]:
 
 
 def _checks_after_write(repo: Repo, path: str) -> dict[str, Any] | None:
-    if path.endswith(".tex"):
-        return _report(checks.check_files(repo, [path]))
-    if path.startswith(f"{repo.db_dir}/") and path.endswith(".csv"):
-        return _db_report(repo)
-    return None
-
-
-def _db_checks(repo: Repo) -> checks.CheckReport:
-    return csvdata.validate_db(repo).extend(checks.check_sfr_consistency(repo))
+    report = checks.check_after_write(repo, path)
+    return _report(report) if report is not None else None
 
 
 def _db_report(repo: Repo) -> dict[str, Any]:
-    return _report(_db_checks(repo))
-
-
-def _changed_paths(repo: Repo) -> list[str]:
-    return [
-        f.path
-        for f in git.status(repo).files
-        if f.worktree != "D" and f.index != "D" and files.is_allowed(repo, f.path)
-    ]
+    return _report(checks.check_db(repo))
 
 
 def create_server(repo: Repo) -> MCPServer:
@@ -223,19 +209,9 @@ def create_server(repo: Repo) -> MCPServer:
         or (default) the files changed in the working tree. sfr_consistency runs
         scripts/check_sfr_consistency.sh (default: when CSV data changed). pdfs
         scans built PDFs for "is undefined" / "To Do"."""
-        report = checks.CheckReport()
-        if document:
-            report.extend(checks.check_document(repo, document))
-        scope = paths if paths is not None else ([] if document else _changed_paths(repo))
-        report.extend(checks.check_files(repo, scope))
-        if sfr_consistency is None:
-            sfr_consistency = any(
-                p.startswith(f"{repo.db_dir}/") and p.endswith(".csv") for p in scope
-            )
-        if sfr_consistency:
-            report.extend(_db_checks(repo))
-        if pdfs:
-            report.extend(checks.check_pdf_sanity(repo, pdfs))
+        report = checks.run_checks(
+            repo, paths=paths, document=document, sfr_consistency=sfr_consistency, pdfs=pdfs
+        )
         return _report(report)
 
     # ------------------------------------------------------------------- csv
@@ -400,16 +376,10 @@ def create_server(repo: Repo) -> MCPServer:
 
 
 def find_repo_root(start: Path | None = None) -> Path:
-    """``NDOC_REPO`` if set, else the nearest ancestor of ``start`` (default cwd)
-    that looks like this checkout (root ``Makefile`` and ``web/``)."""
-    env = os.environ.get("NDOC_REPO")
-    if env:
-        return Path(env)
-    here = (start or Path.cwd()).resolve()
-    for candidate in (here, *here.parents):
-        if (candidate / "Makefile").is_file() and (candidate / "web").is_dir():
-            return candidate
-    raise SystemExit(f"ndoc-mcp: no n-doc checkout found above {here}; set NDOC_REPO")
+    try:
+        return repo_module.find_repo_root(start)
+    except CoreError as exc:
+        raise SystemExit(f"ndoc-mcp: {exc.message}") from exc
 
 
 def main() -> None:

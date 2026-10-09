@@ -13,7 +13,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from ndoc_core import CoreError, Repo, checks, csvdata, files
+from ndoc_core import CoreError, Repo, checks, files
 
 from .server import find_repo_root
 
@@ -33,13 +33,13 @@ def run(argv: list[str]) -> int:
     repo = Repo(find_repo_root())
     rels = [r for r in (_relative(repo, a) for a in argv) if r]
     tex = [r for r in rels if r.endswith(".tex")]
-    csv = any(r.startswith(f"{repo.db_dir}/") and r.endswith(".csv") for r in rels)
+    csv = any(checks.is_db_path(repo, r) for r in rels)
     if not tex and not csv:
         return 0
     try:
         report = checks.check_files(repo, tex)
         if csv:
-            report.extend(csvdata.validate_db(repo)).extend(checks.check_sfr_consistency(repo))
+            report.extend(checks.check_db(repo))
     except CoreError as exc:
         print(f"ndoc-check: {exc.code}: {exc.message}", file=sys.stderr)
         return 2
