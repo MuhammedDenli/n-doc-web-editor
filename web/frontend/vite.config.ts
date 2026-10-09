@@ -8,6 +8,10 @@ export default defineConfig({
     // Same origin in development: the session cookies need no CORS.
     proxy: { "/api": "http://127.0.0.1:8000" },
   },
+  build: {
+    // Monaco (~4 MB) is its own chunk, loaded lazily with the editor.
+    chunkSizeWarningLimit: 4500,
+  },
   test: {
     environment: "jsdom",
     globals: true,
