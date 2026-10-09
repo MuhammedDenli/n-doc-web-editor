@@ -15,6 +15,7 @@ export const qk = {
   lookup: (table: string, column: string) => ["lookup", table, column] as const,
   buildTargets: ["buildTargets"] as const,
   build: ["build"] as const,
+  users: ["users"] as const,
 };
 
 // ---------------------------------------------------------------- auth
@@ -243,4 +244,31 @@ export function useStartBuild() {
       if (isApiError(err, "build_busy")) void client.invalidateQueries({ queryKey: qk.build });
     },
   });
+}
+
+// --------------------------------------------------------------- users
+
+export function useUsers() {
+  return useQuery({ queryKey: qk.users, queryFn: () => unwrap(api.GET("/api/users")) });
+}
+
+export function useUserWrites() {
+  const client = useQueryClient();
+  const onSuccess = () => void client.invalidateQueries({ queryKey: qk.users });
+  return {
+    create: useMutation({
+      mutationFn: (body: Schemas["UserCreate"]) => unwrap(api.POST("/api/users", { body })),
+      onSuccess,
+    }),
+    update: useMutation({
+      mutationFn: ({ username, ...body }: Schemas["UserUpdate"] & { username: string }) =>
+        unwrap(api.PATCH("/api/users/{username}", { params: { path: { username } }, body })),
+      onSuccess,
+    }),
+    remove: useMutation({
+      mutationFn: (username: string) =>
+        unwrap(api.DELETE("/api/users/{username}", { params: { path: { username } } })),
+      onSuccess,
+    }),
+  };
 }

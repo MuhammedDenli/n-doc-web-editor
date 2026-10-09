@@ -4,7 +4,7 @@ import { RequireAdmin, RequireAuth } from "./auth/RequireAuth";
 import { DataPage } from "./data/DataPage";
 import { EditorPage } from "./editor/EditorPage";
 import { AppShell } from "./shell/AppShell";
-import { Placeholder } from "./ui/Placeholder";
+import { UsersPage } from "./users/UsersPage";
 
 /** Opt in to React Router v7 behaviour (silences the v6 deprecation warnings). */
 export const routerFuture = {
@@ -32,7 +32,7 @@ export const routes: RouteObject[] = [
         path: "users",
         element: (
           <RequireAdmin>
-            <Placeholder name="Users" />
+            <UsersPage />
           </RequireAdmin>
         ),
       },
