@@ -1,0 +1,3129 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "n-doc web API",
+    "description": "REST adapter of the n-doc core. Errors are `ErrorBody` objects (`code`, `message`, `details`). Every request except login and health needs the `ndoc_session` cookie; state-changing requests also need the `X-CSRF-Token` header (value of the `ndoc_csrf` cookie).",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Health",
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login",
+        "description": "Check the credentials and start a session (cookies ``ndoc_session``,\nHttpOnly, and ``ndoc_csrf``, to be echoed in ``X-CSRF-Token``).",
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Logout",
+        "operationId": "logout",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Me",
+        "operationId": "me",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/password": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Change Password",
+        "description": "Change the own password; other sessions of the user end.",
+        "operationId": "change_password",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "List Users",
+        "operationId": "list_users",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  },
+                  "type": "array",
+                  "title": "Response List Users"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Create User",
+        "operationId": "create_user",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{username}": {
+      "patch": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Update User",
+        "description": "Change role, password or disabled. The last active admin cannot be\ndemoted or disabled (409 ``last_admin``).",
+        "operationId": "update_user",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Username"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Delete User",
+        "operationId": "delete_user",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Username"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        }
+      }
+    },
+    "/api/project/documents": {
+      "get": {
+        "tags": [
+          "project"
+        ],
+        "summary": "List Documents",
+        "description": "The n-doc documents (``PDF_DIRS``, plus ``mwe_*`` test documents).",
+        "operationId": "list_documents",
+        "parameters": [
+          {
+            "name": "include_mwe",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Include Mwe"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Document"
+                  },
+                  "title": "Response List Documents"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        }
+      }
+    },
+    "/api/project/documents/{name}/tree": {
+      "get": {
+        "tags": [
+          "project"
+        ],
+        "summary": "Document Tree",
+        "description": "The ``\\input`` tree of a document, starting at its main file.",
+        "operationId": "document_tree",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InputNode"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/project/files": {
+      "get": {
+        "tags": [
+          "project"
+        ],
+        "summary": "List Files",
+        "description": "Readable files below ``dir`` (recursive).",
+        "operationId": "list_files",
+        "parameters": [
+          {
+            "name": "dir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Dir"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FileEntry"
+                  },
+                  "title": "Response List Files"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/project/files/{path}": {
+      "get": {
+        "tags": [
+          "project"
+        ],
+        "summary": "Read File",
+        "description": "A text file with its ``sha256`` (send it back as ``expected_sha256``).",
+        "operationId": "read_file",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileContent"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "project"
+        ],
+        "summary": "Write File",
+        "description": "Write a whole file atomically. 409 ``stale_write`` (with ``current_hash``)\nwhen it changed since it was read. Returns the check results of the saved\nfile (LaTeX syntax + references; key/FK checks for ``common/db`` CSV).",
+        "operationId": "write_file",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Path"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FileWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WriteResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          }
+        }
+      }
+    },
+    "/api/project/search": {
+      "get": {
+        "tags": [
+          "project"
+        ],
+        "summary": "Search",
+        "operationId": "search",
+        "parameters": [
+          {
+            "name": "pattern",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Pattern"
+            }
+          },
+          {
+            "name": "dir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Dir"
+            }
+          },
+          {
+            "name": "regex",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Regex"
+            }
+          },
+          {
+            "name": "ignore_case",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Ignore Case"
+            }
+          },
+          {
+            "name": "max_results",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 100,
+              "title": "Max Results"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/project/references": {
+      "get": {
+        "tags": [
+          "project"
+        ],
+        "summary": "References",
+        "description": "Reference macros (``\\sfrlink`` -> ``sfr``, ...) and the valid keys per kind.",
+        "operationId": "references",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/References"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/project/checks": {
+      "post": {
+        "tags": [
+          "project"
+        ],
+        "summary": "Run Checks",
+        "description": "Static checks without changing anything (allowed for every role).",
+        "operationId": "run_checks",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChecksRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckReport"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data/tables": {
+      "get": {
+        "tags": [
+          "data"
+        ],
+        "summary": "List Tables",
+        "description": "Tables with CSV path, columns (header order), primary key and foreign\nkeys (composite ones included).",
+        "operationId": "list_tables",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TableInfo"
+                  },
+                  "type": "array",
+                  "title": "Response List Tables"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data/{table}": {
+      "get": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Read Table",
+        "description": "All rows (with their file line) and the file's ``sha256``.",
+        "operationId": "read_table",
+        "parameters": [
+          {
+            "name": "table",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Table"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TableData"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Insert Row",
+        "description": "Append a row. 409 ``duplicate_key``, 422 ``foreign_key_violation``.",
+        "operationId": "insert_row",
+        "parameters": [
+          {
+            "name": "table",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Table"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RowInsert"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RowChange"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Update Row",
+        "description": "Change columns of the one row matching ``match``. A key other rows\nreference cannot change (409 ``row_referenced``): use rename-key.",
+        "operationId": "update_row",
+        "parameters": [
+          {
+            "name": "table",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Table"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RowUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RowChange"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Delete Row",
+        "description": "Delete the one row matching ``match``. 409 ``row_referenced`` (details\n``referenced_by``) while other rows reference it.",
+        "operationId": "delete_row",
+        "parameters": [
+          {
+            "name": "table",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Table"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RowDelete"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RowChange"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        }
+      }
+    },
+    "/api/data/{table}/lookup": {
+      "get": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Lookup",
+        "description": "Allowed values of ``table.column``: for a foreign key column the\nreferenced rows (``key`` holds the full, possibly composite key).",
+        "operationId": "lookup",
+        "parameters": [
+          {
+            "name": "table",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Table"
+            }
+          },
+          {
+            "name": "column",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Column"
+            }
+          },
+          {
+            "name": "prefix",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Prefix"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LookupOption"
+                  },
+                  "title": "Response Lookup"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/data/{table}/rename-key": {
+      "post": {
+        "tags": [
+          "data"
+        ],
+        "summary": "Rename Key",
+        "description": "Rename a row's key and every CSV row referencing it in one atomic write;\n``tex_references`` lists the .tex references to update.",
+        "operationId": "rename_key",
+        "parameters": [
+          {
+            "name": "table",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Table"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenameKeyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RenameResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        }
+      }
+    },
+    "/api/build/targets": {
+      "get": {
+        "tags": [
+          "build"
+        ],
+        "summary": "List Build Targets",
+        "description": "Every target ``POST /api/build/{target}`` accepts (aliases such as\n``tds``, ``st``, ``delivery`` and document directories).",
+        "operationId": "list_build_targets",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "title": "Response List Build Targets"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/build/{target}": {
+      "post": {
+        "tags": [
+          "build"
+        ],
+        "summary": "Start Build",
+        "description": "Start a build in the background; poll ``GET /api/build/latest``.\n409 ``build_busy`` while another build runs.",
+        "operationId": "start_build",
+        "parameters": [
+          {
+            "name": "target",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Target"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        }
+      }
+    },
+    "/api/build/latest": {
+      "get": {
+        "tags": [
+          "build"
+        ],
+        "summary": "Latest Build",
+        "description": "State of the latest build; ``log_tail`` grows while it runs.",
+        "operationId": "latest_build",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/preview/{document}": {
+      "get": {
+        "tags": [
+          "build"
+        ],
+        "summary": "Preview",
+        "description": "The built PDF of a document (inline). 404 ``not_found`` if not built yet.",
+        "operationId": "preview",
+        "parameters": [
+          {
+            "name": "document",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The PDF",
+            "content": {
+              "application/pdf": {}
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BuildStatus": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "idle",
+              "running",
+              "succeeded",
+              "failed"
+            ],
+            "title": "State"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "elapsed_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Elapsed S"
+          },
+          "returncode": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Returncode"
+          },
+          "timed_out": {
+            "type": "boolean",
+            "title": "Timed Out",
+            "default": false
+          },
+          "log_tail": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Log Tail"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors"
+          },
+          "pdfs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Pdfs"
+          },
+          "pdf_checks": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CheckReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "state"
+        ],
+        "title": "BuildStatus",
+        "description": "The latest build of this server. ``log_tail`` grows while running;\n``error`` is set when the build could not run (e.g. Docker missing)."
+      },
+      "CheckReport": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/Issue"
+            },
+            "type": "array",
+            "title": "Issues"
+          },
+          "checked": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Checked"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok",
+          "issues",
+          "checked"
+        ],
+        "title": "CheckReport"
+      },
+      "ChecksRequest": {
+        "properties": {
+          "paths": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paths"
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document"
+          },
+          "sfr_consistency": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sfr Consistency"
+          },
+          "pdfs": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pdfs"
+          }
+        },
+        "type": "object",
+        "title": "ChecksRequest",
+        "description": "Scope: ``paths``, or a whole ``document``, or (neither) the files changed\nin the working tree. ``sfr_consistency`` defaults to \"when CSV data is in\nscope\"; ``pdfs`` scans built PDFs."
+      },
+      "Document": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "pdf",
+              "mwe"
+            ],
+            "title": "Kind"
+          },
+          "main_file": {
+            "type": "string",
+            "title": "Main File"
+          },
+          "pdf_file": {
+            "type": "string",
+            "title": "Pdf File"
+          },
+          "pdf_exists": {
+            "type": "boolean",
+            "title": "Pdf Exists"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "kind",
+          "main_file",
+          "pdf_file",
+          "pdf_exists"
+        ],
+        "title": "Document"
+      },
+      "ErrorBody": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "details": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorBody",
+        "description": "Every error response. ``code`` is stable (core error codes plus\n``unauthenticated``, ``forbidden``, ``csrf_failed``, ``invalid_credentials``,\n``too_many_attempts``, ``invalid_request``, ``last_admin``)."
+      },
+      "FileChange": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          },
+          "rows_changed": {
+            "type": "integer",
+            "title": "Rows Changed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "sha256",
+          "rows_changed"
+        ],
+        "title": "FileChange"
+      },
+      "FileContent": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "text",
+          "sha256",
+          "size"
+        ],
+        "title": "FileContent"
+      },
+      "FileEntry": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "writable": {
+            "type": "boolean",
+            "title": "Writable"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "size",
+          "writable"
+        ],
+        "title": "FileEntry"
+      },
+      "FileWrite": {
+        "properties": {
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "expected_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Sha256"
+          },
+          "create": {
+            "type": "boolean",
+            "title": "Create",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "content"
+        ],
+        "title": "FileWrite",
+        "description": "Existing file: ``expected_sha256`` (from the read) must match. New file:\n``create=true`` (the directory must exist)."
+      },
+      "ForeignKey": {
+        "properties": {
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "ref_table": {
+            "type": "string",
+            "title": "Ref Table"
+          },
+          "ref_columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Ref Columns"
+          }
+        },
+        "type": "object",
+        "required": [
+          "columns",
+          "ref_table",
+          "ref_columns"
+        ],
+        "title": "ForeignKey"
+      },
+      "Health": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          }
+        },
+        "type": "object",
+        "title": "Health"
+      },
+      "InputNode": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "exists": {
+            "type": "boolean",
+            "title": "Exists"
+          },
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/InputNode"
+            },
+            "type": "array",
+            "title": "Children"
+          },
+          "line": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "exists"
+        ],
+        "title": "InputNode"
+      },
+      "Issue": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "error",
+              "warning"
+            ],
+            "title": "Severity",
+            "default": "error"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "line": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line"
+          },
+          "col": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Col"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "Issue"
+      },
+      "LoginRequest": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "LoginRequest"
+      },
+      "LookupOption": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "key": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "name",
+          "key"
+        ],
+        "title": "LookupOption"
+      },
+      "PasswordChange": {
+        "properties": {
+          "current_password": {
+            "type": "string",
+            "title": "Current Password"
+          },
+          "new_password": {
+            "type": "string",
+            "title": "New Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "PasswordChange"
+      },
+      "ReferenceKey": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "key"
+        ],
+        "title": "ReferenceKey"
+      },
+      "References": {
+        "properties": {
+          "macros": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Macros"
+          },
+          "keys": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/ReferenceKey"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Keys"
+          }
+        },
+        "type": "object",
+        "required": [
+          "macros",
+          "keys"
+        ],
+        "title": "References",
+        "description": "Editor completion: reference macro -> kind, kind -> valid keys."
+      },
+      "RenameKeyRequest": {
+        "properties": {
+          "match": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Match"
+          },
+          "new_key": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "New Key"
+          },
+          "expected_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Sha256"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match",
+          "new_key"
+        ],
+        "title": "RenameKeyRequest"
+      },
+      "RenameResult": {
+        "properties": {
+          "table": {
+            "type": "string",
+            "title": "Table"
+          },
+          "old_key": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Old Key"
+          },
+          "new_key": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "New Key"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/FileChange"
+            },
+            "type": "array",
+            "title": "Files"
+          },
+          "tex_references": {
+            "items": {
+              "$ref": "#/components/schemas/TexReference"
+            },
+            "type": "array",
+            "title": "Tex References"
+          },
+          "checks": {
+            "$ref": "#/components/schemas/CheckReport"
+          }
+        },
+        "type": "object",
+        "required": [
+          "table",
+          "old_key",
+          "new_key",
+          "files",
+          "tex_references",
+          "checks"
+        ],
+        "title": "RenameResult"
+      },
+      "Row": {
+        "properties": {
+          "line": {
+            "type": "integer",
+            "title": "Line"
+          },
+          "values": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line",
+          "values"
+        ],
+        "title": "Row"
+      },
+      "RowChange": {
+        "properties": {
+          "table": {
+            "type": "string",
+            "title": "Table"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          },
+          "line": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line"
+          },
+          "row": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Row"
+          },
+          "checks": {
+            "$ref": "#/components/schemas/CheckReport"
+          }
+        },
+        "type": "object",
+        "required": [
+          "table",
+          "path",
+          "sha256",
+          "line",
+          "row",
+          "checks"
+        ],
+        "title": "RowChange"
+      },
+      "RowDelete": {
+        "properties": {
+          "match": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Match"
+          },
+          "expected_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Sha256"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match"
+        ],
+        "title": "RowDelete"
+      },
+      "RowInsert": {
+        "properties": {
+          "values": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Values"
+          },
+          "expected_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Sha256"
+          }
+        },
+        "type": "object",
+        "required": [
+          "values"
+        ],
+        "title": "RowInsert"
+      },
+      "RowUpdate": {
+        "properties": {
+          "match": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Match"
+          },
+          "values": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Values"
+          },
+          "expected_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Sha256"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match",
+          "values"
+        ],
+        "title": "RowUpdate",
+        "description": "``match``: the primary key (or the whole row for tables without one)."
+      },
+      "SearchMatch": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "line": {
+            "type": "integer",
+            "title": "Line"
+          },
+          "col": {
+            "type": "integer",
+            "title": "Col"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "line",
+          "col",
+          "text"
+        ],
+        "title": "SearchMatch"
+      },
+      "SearchResult": {
+        "properties": {
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/SearchMatch"
+            },
+            "type": "array",
+            "title": "Matches"
+          },
+          "truncated": {
+            "type": "boolean",
+            "title": "Truncated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "matches",
+          "truncated"
+        ],
+        "title": "SearchResult"
+      },
+      "TableData": {
+        "properties": {
+          "table": {
+            "type": "string",
+            "title": "Table"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "primary_key": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Primary Key"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/Row"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "truncated": {
+            "type": "boolean",
+            "title": "Truncated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "table",
+          "path",
+          "columns",
+          "primary_key",
+          "sha256",
+          "rows",
+          "total",
+          "truncated"
+        ],
+        "title": "TableData"
+      },
+      "TableInfo": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Columns"
+          },
+          "primary_key": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Primary Key"
+          },
+          "foreign_keys": {
+            "items": {
+              "$ref": "#/components/schemas/ForeignKey"
+            },
+            "type": "array",
+            "title": "Foreign Keys"
+          },
+          "row_count": {
+            "type": "integer",
+            "title": "Row Count"
+          },
+          "trailing_newline": {
+            "type": "boolean",
+            "title": "Trailing Newline"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "path",
+          "columns",
+          "primary_key",
+          "foreign_keys",
+          "row_count",
+          "trailing_newline"
+        ],
+        "title": "TableInfo"
+      },
+      "TexReference": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "line": {
+            "type": "integer",
+            "title": "Line"
+          },
+          "col": {
+            "type": "integer",
+            "title": "Col"
+          },
+          "macro": {
+            "type": "string",
+            "title": "Macro"
+          },
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "replacement": {
+            "type": "string",
+            "title": "Replacement"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "line",
+          "col",
+          "macro",
+          "key",
+          "replacement"
+        ],
+        "title": "TexReference"
+      },
+      "User": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "editor"
+            ],
+            "title": "Role"
+          },
+          "disabled": {
+            "type": "boolean",
+            "title": "Disabled",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "role"
+        ],
+        "title": "User"
+      },
+      "UserCreate": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "editor"
+            ],
+            "title": "Role",
+            "default": "editor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "UserCreate"
+      },
+      "UserUpdate": {
+        "properties": {
+          "role": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "admin",
+                  "editor"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
+          },
+          "disabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disabled"
+          }
+        },
+        "type": "object",
+        "title": "UserUpdate"
+      },
+      "WriteResult": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "created": {
+            "type": "boolean",
+            "title": "Created"
+          },
+          "checks": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CheckReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "sha256",
+          "size",
+          "created"
+        ],
+        "title": "WriteResult"
+      }
+    }
+  }
+}
