@@ -1,3 +1,252 @@
 :root {
-  font-family: system-ui, sans-serif;
+  --bg: #ffffff;
+  --bg-alt: #f4f5f7;
+  --fg: #1d2129;
+  --muted: #697080;
+  --border: #d9dce1;
+  --accent: #2f6fdb;
+  --accent-fg: #ffffff;
+  --danger: #c4322b;
+  --warn: #a96500;
+  --ok: #24813f;
+  color-scheme: light dark;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+  font-size: 14px;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1b1d22;
+    --bg-alt: #24272e;
+    --fg: #e3e5ea;
+    --muted: #9298a6;
+    --border: #3a3e47;
+    --accent: #5b8ff0;
+    --danger: #ef6b62;
+    --warn: #e0a440;
+    --ok: #5cc27a;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 0.75rem;
+}
+h2 {
+  font-size: 1.15rem;
+}
+h3 {
+  font-size: 1rem;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+input,
+select,
+textarea {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.35rem 0.5rem;
+}
+
+button {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+}
+button.danger {
+  color: var(--danger);
+}
+button.link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  text-align: left;
+}
+
+.muted {
+  color: var(--muted);
+}
+.pad {
+  padding: 1rem;
+}
+.error {
+  color: var(--danger);
+  margin: 0.5rem 0;
+  white-space: pre-wrap;
+}
+.warning {
+  color: var(--warn);
+}
+.ok {
+  color: var(--ok);
+}
+.badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 0 0.4rem;
+  border-radius: 8px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+/* ---------------------------------------------------------- login */
+.login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: var(--bg-alt);
+}
+.card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  width: min(22rem, calc(100vw - 2rem));
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ---------------------------------------------------------- forms, dialogs */
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+label.inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+.dialog {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  width: min(28rem, calc(100vw - 2rem));
+  background: var(--bg);
+  color: var(--fg);
+}
+.dialog-wide {
+  width: min(44rem, calc(100vw - 2rem));
+}
+.dialog::backdrop {
+  background: rgb(0 0 0 / 0.35);
+}
+
+/* ---------------------------------------------------------- shell */
+.shell {
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 16rem minmax(0, 1fr) minmax(18rem, 34%);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    "top top top"
+    "side main panel";
+}
+.topbar {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-alt);
+}
+.brand {
+  font-weight: 600;
+  margin-right: 1rem;
+}
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+}
+.tabs a {
+  padding: 0.3rem 0.7rem;
+  border-radius: 4px;
+  color: var(--fg);
+  text-decoration: none;
+}
+.tabs a.active {
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+.spacer {
+  flex: 1;
+}
+.sidebar {
+  grid-area: side;
+  border-right: 1px solid var(--border);
+  overflow: auto;
+}
+.content {
+  grid-area: main;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.panel {
+  grid-area: panel;
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+@media (max-width: 900px) {
+  .shell {
+    grid-template-columns: 12rem minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) 40vh;
+    grid-template-areas:
+      "top top"
+      "side main"
+      "panel panel";
+  }
 }
