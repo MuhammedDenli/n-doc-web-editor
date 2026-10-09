@@ -208,3 +208,33 @@ def test_pdf_sanity_on_built_mwe(real_repo):
 def test_pdf_sanity_missing_pdf(repo):
     report = checks.check_pdf_sanity(repo, ["mwe_tds/mwe_tds.pdf", "../x.pdf"])
     assert codes(report.issues) in (["missing_pdf", "missing_pdf"], ["tool_missing"])
+
+
+# ---------------------------------------------------------------- adapter entry points
+
+
+def test_reference_keys_all_resolve(repo):
+    index = checks.ReferenceIndex.load(repo)
+    keys = checks.reference_keys(repo)
+    assert set(keys) == set(checks.REFERENCE_MACROS.values())
+    assert any(k.key == "mod.vpn.core" for k in keys["tds"])
+    assert any(k.key == "fcs_ckm.1" and k.name for k in keys["sfr"])
+    for kind, entries in keys.items():
+        assert entries, kind
+        unresolved = [k.key for k in entries if not index.resolves(kind, k.key)]
+        assert unresolved == [], (kind, unresolved)
+
+
+def test_check_after_write_scopes(repo):
+    assert checks.check_after_write(repo, "mwe_tds/mwe_tds_body.tex").ok
+    assert checks.check_after_write(repo, "common/db/sfr.csv").checked
+    assert checks.check_after_write(repo, "common/bib/x.bib") is None
+
+
+def test_run_checks_defaults_to_changed_files(repo):
+    body = repo.root / "mwe_tds/mwe_tds_body.tex"
+    body.write_text(body.read_text() + "\\sfrlink{YOK}\n", encoding="utf-8")
+    report = checks.run_checks(repo)
+    assert report.checked == ["mwe_tds/mwe_tds_body.tex"]
+    assert codes(report.issues) == ["undefined_reference"]
+    assert checks.run_checks(repo, paths=[]).issues == []

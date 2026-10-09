@@ -16,7 +16,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Literal
 
-from . import csvdata, docs, files, pdf
+from . import csvdata, docs, files, git, pdf
 from .errors import ToolMissingError
 from .repo import Repo
 from .texutil import line_col, strip_comments
@@ -356,6 +356,98 @@ def check_all_documents(repo: Repo) -> CheckReport:
     # files shared by several documents are reported once
     report.issues = list(dict.fromkeys(report.issues))
     return report
+
+
+# --------------------------------------------------------------------------
+# Adapter entry points (shared by the MCP server and the HTTP API)
+# --------------------------------------------------------------------------
+
+
+def is_db_path(repo: Repo, rel: str) -> bool:
+    return rel.startswith(f"{repo.db_dir}/") and rel.endswith(".csv")
+
+
+def check_db(repo: Repo) -> CheckReport:
+    """Key/FK validation (violations new since ``HEAD`` are errors) + SFR consistency."""
+    return csvdata.validate_db(repo).extend(check_sfr_consistency(repo))
+
+
+def check_after_write(repo: Repo, rel: str) -> CheckReport | None:
+    """The checks to report after ``rel`` was written (None: nothing to check)."""
+    if rel.endswith(".tex"):
+        return check_files(repo, [rel])
+    if is_db_path(repo, rel):
+        return check_db(repo)
+    return None
+
+
+def changed_paths(repo: Repo) -> list[str]:
+    """Readable files changed in the working tree (deleted ones excluded)."""
+    return [
+        f.path
+        for f in git.status(repo).files
+        if f.worktree != "D" and f.index != "D" and files.is_allowed(repo, f.path)
+    ]
+
+
+def run_checks(
+    repo: Repo,
+    *,
+    paths: Iterable[str] | None = None,
+    document: str | None = None,
+    sfr_consistency: bool | None = None,
+    pdfs: Iterable[str] | None = None,
+) -> CheckReport:
+    """Static checks of ``paths``, or a whole ``document``, or (neither) the
+    changed files. ``sfr_consistency`` (default: when CSV data is in scope) adds
+    :func:`check_db`; ``pdfs`` scans built PDFs."""
+    report = CheckReport()
+    if document:
+        report.extend(check_document(repo, document))
+    scope = list(paths) if paths is not None else ([] if document else changed_paths(repo))
+    report.extend(check_files(repo, scope))
+    if sfr_consistency is None:
+        sfr_consistency = any(is_db_path(repo, p) for p in scope)
+    if sfr_consistency:
+        report.extend(check_db(repo))
+    if pdfs:
+        report.extend(check_pdf_sanity(repo, pdfs))
+    return report
+
+
+@dataclass(frozen=True)
+class ReferenceKey:
+    key: str
+    name: str = ""
+
+
+def reference_keys(repo: Repo) -> dict[str, list[ReferenceKey]]:
+    """Valid keys per reference kind, for editor completion. ``tds`` keys are
+    ``sub.<s>``, ``mod.<s>.<m>`` and ``int.<s>.<m>.<i>``."""
+
+    def rows(name: str) -> list[dict[str, str]]:
+        return csvdata.read_csv_rows(repo, f"{repo.db_dir}/{name}")
+
+    out: dict[str, list[ReferenceKey]] = {}
+    for kind, (name, col) in _SIMPLE_TABLES.items():
+        keys: dict[str, ReferenceKey] = {}
+        for r in rows(name):
+            key = (r.get(col) or "").strip()
+            if key:
+                keys.setdefault(key, ReferenceKey(key, r.get("name") or r.get("msg") or ""))
+        out[kind] = list(keys.values())
+    tds = [ReferenceKey(f"sub.{r['label']}", r.get("name") or "") for r in rows("subsystems.csv")]
+    tds += [
+        ReferenceKey(f"mod.{r['subsystem']}.{r['label']}", r.get("name") or "")
+        for r in rows("modules.csv")
+    ]
+    tds += [
+        ReferenceKey(f"int.{r['subsystem']}.{r['module']}.{r['label']}", r.get("name") or "")
+        for r in rows("interfaces.csv")
+    ]
+    index = ReferenceIndex.load(repo)  # drops keys of dangling rows (e.g. a missing module)
+    out["tds"] = [k for k in dict.fromkeys(tds) if index.resolves("tds", k.key)]
+    return out
 
 
 # --------------------------------------------------------------------------

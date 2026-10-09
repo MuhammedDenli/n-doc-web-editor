@@ -64,6 +64,19 @@ class Repo:
             yield acquired
 
 
+def find_repo_root(start: Path | None = None) -> Path:
+    """``NDOC_REPO`` if set, else the nearest ancestor of ``start`` (default cwd)
+    that looks like this checkout (root ``Makefile`` and ``web/``)."""
+    env = os.environ.get("NDOC_REPO")
+    if env:
+        return Path(env)
+    here = (start or Path.cwd()).resolve()
+    for candidate in (here, *here.parents):
+        if (candidate / "Makefile").is_file() and (candidate / "web").is_dir():
+            return candidate
+    raise CoreError(f"no n-doc checkout found above {here}; set NDOC_REPO")
+
+
 def _default_state_dir(root: Path) -> Path:
     # Inside .git so it is never part of the working tree; worktrees (where
     # .git is a file) and plain copies fall back to a per-root temp dir.
