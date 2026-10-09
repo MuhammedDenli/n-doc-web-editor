@@ -1,0 +1,50 @@
+[project]
+name = "ndoc-api"
+version = "0.1.0"
+description = "FastAPI adapter over the n-doc core: auth, documents, files, CSV data, build and PDF preview"
+requires-python = ">=3.11"
+dependencies = [
+  "ndoc-core",
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.30",
+  "argon2-cffi>=23.1",
+]
+
+[project.scripts]
+ndoc-api = "ndoc_api.cli:main"
+
+[tool.uv.sources]
+ndoc-core = { path = "../core", editable = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+    "httpx2>=2.13.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ndoc_api"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-m 'not docker'"
+markers = ["docker: needs Docker and the n-doc image (slow, real build)"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM"]
+ignore = ["S603", "S607"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "S105", "S106", "S108"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["ndoc_core", "ndoc_api"]
