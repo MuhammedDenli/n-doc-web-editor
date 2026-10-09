@@ -13,6 +13,8 @@ export const qk = {
   tables: ["tables"] as const,
   table: (name: string) => ["table", name] as const,
   lookup: (table: string, column: string) => ["lookup", table, column] as const,
+  buildTargets: ["buildTargets"] as const,
+  build: ["build"] as const,
 };
 
 // ---------------------------------------------------------------- auth
@@ -196,4 +198,49 @@ export function useRowWrites(table: string) {
       onError,
     }),
   };
+}
+
+// --------------------------------------------------------------- build
+
+export type BuildStatus = Schemas["BuildStatus"];
+
+export const BUILD_POLL_MS = 1000;
+
+export function useBuildTargets() {
+  return useQuery({
+    queryKey: qk.buildTargets,
+    queryFn: () => unwrap(api.GET("/api/build/targets")),
+    staleTime: Infinity,
+  });
+}
+
+/** The latest build; polled every second while it runs. */
+export function useBuildStatus() {
+  const client = useQueryClient();
+  return useQuery({
+    queryKey: qk.build,
+    queryFn: async () => {
+      const previous = client.getQueryData<BuildStatus>(qk.build);
+      const status = await unwrap(api.GET("/api/build/latest"));
+      // A finished build changes which PDFs exist.
+      if (previous?.state === "running" && status.state !== "running") {
+        void client.invalidateQueries({ queryKey: qk.documents });
+      }
+      return status;
+    },
+    refetchInterval: (query) => (query.state.data?.state === "running" ? BUILD_POLL_MS : false),
+  });
+}
+
+export function useStartBuild() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (target: string) =>
+      unwrap(api.POST("/api/build/{target}", { params: { path: { target } } })),
+    onSuccess: (status) => client.setQueryData(qk.build, status),
+    onError: (err) => {
+      // Someone else's build: show it.
+      if (isApiError(err, "build_busy")) void client.invalidateQueries({ queryKey: qk.build });
+    },
+  });
 }

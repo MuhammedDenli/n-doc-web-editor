@@ -10,6 +10,10 @@ export const handlers = [
   http.get("/api/project/documents/:name/tree", () => HttpResponse.json(tree)),
   http.get("/api/project/references", () => HttpResponse.json(references)),
   http.get("/api/data/tables", () => HttpResponse.json([])),
+  http.get("/api/build/targets", () =>
+    HttpResponse.json(["adv_tds", "mwe_tds", "delivery", "tds"]),
+  ),
+  http.get("/api/build/latest", () => HttpResponse.json({ state: "idle" })),
 ];
 
 export function apiError(status: number, code: string, message = code, details = {}) {

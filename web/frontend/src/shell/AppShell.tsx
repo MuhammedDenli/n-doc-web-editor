@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { setUnauthorizedHandler } from "../api/client";
 import { qk, useMe } from "../api/queries";
+import { BuildPanel } from "../build/BuildPanel";
 import { DocumentTree } from "../docs/DocumentTree";
 import { ActiveDocumentProvider } from "./activeDocument";
 import { TopBar } from "./TopBar";
@@ -31,7 +32,9 @@ export function AppShell() {
         <main className="content">
           <Outlet />
         </main>
-        <aside className="panel" />
+        <aside className="panel">
+          <BuildPanel />
+        </aside>
       </div>
     </ActiveDocumentProvider>
   );

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useLogout, type User } from "../api/queries";
+import { BuildControls } from "../build/BuildControls";
 import { PasswordDialog } from "./PasswordDialog";
 
 export function TopBar({ user }: { user: User }) {
@@ -17,6 +18,7 @@ export function TopBar({ user }: { user: User }) {
         {user.role === "admin" && <NavLink to="/users">Users</NavLink>}
       </nav>
       <span className="spacer" />
+      <BuildControls />
       <span className="user">
         {user.username} <span className="badge">{user.role}</span>
       </span>
