@@ -238,7 +238,11 @@ export function useStartBuild() {
   return useMutation({
     mutationFn: (target: string) =>
       unwrap(api.POST("/api/build/{target}", { params: { path: { target } } })),
-    onSuccess: (status) => client.setQueryData(qk.build, status),
+    onSuccess: async (status) => {
+      // An older in-flight poll must not overwrite the new running state.
+      await client.cancelQueries({ queryKey: qk.build });
+      client.setQueryData(qk.build, status);
+    },
     onError: (err) => {
       // Someone else's build: show it.
       if (isApiError(err, "build_busy")) void client.invalidateQueries({ queryKey: qk.build });

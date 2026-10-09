@@ -29,8 +29,8 @@ describe("login", () => {
     await user.type(screen.getByLabelText("Password"), "secret");
     await user.click(screen.getByRole("button", { name: "Log in" }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/data"));
-    expect(screen.getByText("alice")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Users" })).toBeInTheDocument();
+    expect(await screen.findByText("alice")).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "Users" })).toBeInTheDocument();
   });
 
   it("shows the lockout wait time", async () => {

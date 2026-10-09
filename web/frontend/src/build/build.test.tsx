@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { Schemas } from "../api/client";
@@ -57,15 +57,17 @@ describe("build panel", () => {
     expect(await screen.findByText("adv_tds has not been built yet.")).toBeInTheDocument();
 
     await user.click(await screen.findByRole("button", { name: "Build adv_tds" }));
+    expect(await screen.findByLabelText("Build log")).toHaveTextContent("latexmk");
+    expect(screen.getByRole("status")).toHaveTextContent("adv_tds running · 3 s");
     expect(screen.getByRole("button", { name: "Build adv_tds" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Build delivery" })).toBeDisabled();
-    expect(screen.getByLabelText("Build log")).toHaveTextContent("latexmk");
-    expect(screen.getByRole("status")).toHaveTextContent("adv_tds running · 3 s");
 
     const frame = await screen.findByTitle("adv_tds PDF", {}, { timeout: 3000 });
     expect(frame).toHaveAttribute("src", "/api/preview/adv_tds?v=1000");
     expect(screen.getByRole("status")).toHaveTextContent("adv_tds succeeded · 12 s");
-    expect(screen.getByRole("button", { name: "Build adv_tds" })).toBeEnabled();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Build adv_tds" })).toBeEnabled(),
+    );
   });
 
   it("reports a busy build server", async () => {
@@ -94,6 +96,6 @@ describe("build panel", () => {
         "! Undefined control sequence.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("Build log")).toHaveTextContent("l.12 \\foo");
+    expect(await screen.findByLabelText("Build log")).toHaveTextContent("l.12 \\foo");
   });
 });
