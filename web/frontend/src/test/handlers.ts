@@ -9,6 +9,7 @@ export const handlers = [
   http.get("/api/project/documents", () => HttpResponse.json(documents)),
   http.get("/api/project/documents/:name/tree", () => HttpResponse.json(tree)),
   http.get("/api/project/references", () => HttpResponse.json(references)),
+  http.get("/api/data/tables", () => HttpResponse.json([])),
 ];
 
 export function apiError(status: number, code: string, message = code, details = {}) {

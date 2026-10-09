@@ -1,6 +1,7 @@
 import { Navigate, type RouteObject } from "react-router-dom";
 import { LoginPage } from "./auth/LoginPage";
 import { RequireAdmin, RequireAuth } from "./auth/RequireAuth";
+import { DataPage } from "./data/DataPage";
 import { EditorPage } from "./editor/EditorPage";
 import { AppShell } from "./shell/AppShell";
 import { Placeholder } from "./ui/Placeholder";
@@ -26,7 +27,7 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, element: <Navigate to="/edit" replace /> },
       { path: "edit/*", element: <EditorPage /> },
-      { path: "data/:table?", element: <Placeholder name="Common data" /> },
+      { path: "data/:table?", element: <DataPage /> },
       {
         path: "users",
         element: (

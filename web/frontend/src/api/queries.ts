@@ -10,6 +10,9 @@ export const qk = {
   tree: (name: string) => ["tree", name] as const,
   file: (path: string) => ["file", path] as const,
   references: ["references"] as const,
+  tables: ["tables"] as const,
+  table: (name: string) => ["table", name] as const,
+  lookup: (table: string, column: string) => ["lookup", table, column] as const,
 };
 
 // ---------------------------------------------------------------- auth
@@ -116,4 +119,81 @@ export function useReferences() {
     queryFn: () => unwrap(api.GET("/api/project/references")),
     staleTime: 60_000,
   });
+}
+
+// ---------------------------------------------------------------- data
+
+export type TableInfo = Schemas["TableInfo"];
+export type TableData = Schemas["TableData"];
+export type ForeignKey = Schemas["ForeignKey"];
+export type LookupOption = Schemas["LookupOption"];
+export type RowChange = Schemas["RowChange"];
+export type RenameResult = Schemas["RenameResult"];
+
+export function useTables() {
+  return useQuery({ queryKey: qk.tables, queryFn: () => unwrap(api.GET("/api/data/tables")) });
+}
+
+export function useTable(table: string | undefined) {
+  return useQuery({
+    queryKey: qk.table(table ?? ""),
+    queryFn: () =>
+      unwrap(api.GET("/api/data/{table}", { params: { path: { table: table! }, query: {} } })),
+    enabled: !!table,
+  });
+}
+
+/** Allowed values of `table.column` (for FK columns: the referenced rows). */
+export function useLookup(table: string, column: string) {
+  return useQuery({
+    queryKey: qk.lookup(table, column),
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/data/{table}/lookup", {
+          params: { path: { table }, query: { column, limit: 1000 } },
+        }),
+      ),
+  });
+}
+
+/** Row writes; afterwards every table view, FK option and completion key is stale. */
+export function useRowWrites(table: string) {
+  const client = useQueryClient();
+  const onSuccess = () => {
+    for (const key of [["table"], ["tables"], ["lookup"], qk.references]) {
+      void client.invalidateQueries({ queryKey: key });
+    }
+  };
+  // The table changed since it was read: reload it so a retry sends the new hash.
+  const onError = (err: unknown) => {
+    if (isApiError(err, "stale_write"))
+      void client.invalidateQueries({ queryKey: qk.table(table) });
+  };
+  const path = { table };
+  return {
+    insert: useMutation({
+      mutationFn: (body: Schemas["RowInsert"]) =>
+        unwrap(api.POST("/api/data/{table}", { params: { path }, body })),
+      onSuccess,
+      onError,
+    }),
+    update: useMutation({
+      mutationFn: (body: Schemas["RowUpdate"]) =>
+        unwrap(api.PUT("/api/data/{table}", { params: { path }, body })),
+      onSuccess,
+      onError,
+    }),
+    remove: useMutation({
+      mutationFn: (body: Schemas["RowDelete"]) =>
+        unwrap(api.DELETE("/api/data/{table}", { params: { path }, body })),
+      onSuccess,
+      onError,
+    }),
+    rename: useMutation({
+      mutationFn: (body: Schemas["RenameKeyRequest"]) =>
+        unwrap(api.POST("/api/data/{table}/rename-key", { params: { path }, body })),
+      onSuccess,
+      onError,
+    }),
+  };
 }
